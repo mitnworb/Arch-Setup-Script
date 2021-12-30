@@ -386,7 +386,7 @@ StartupNotify=false
 NoDisplay=true
 EOF
 chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
-arch=chroot /mnt chown -R $username:$username /home/${username}/.config
+arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 
 # Setting user password
 [ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username"
