@@ -9,7 +9,7 @@ pacman -Sy
 # Installing curl
 pacman -S --noconfirm curl
 
-# Selecting the kernel flavor to install.
+# Selecting the kernel flavor to install. 
 kernel_selector () {
     echo "List of kernels:"
     echo "1) Stable — Vanilla Linux kernel and modules, with a few patches applied."
@@ -149,7 +149,7 @@ echo "Mounting the newly created subvolumes."
 mount -o ssd,noatime,space_cache,compress=zstd:15 $BTRFS /mnt
 mkdir -p /mnt/{boot,root,home,.snapshots,srv,tmp,/var/log,/var/crash,/var/cache,/var/tmp,/var/spool,/var/lib/libvirt/images,/var/lib/machines,/var/lib/gdm,/var/lib/AccountsService,/cryptkey}
 mount -o ssd,noatime,space_cache=v2,autodefrag,compress=zstd:15,discard=async,nodev,nosuid,noexec,subvol=@/boot $BTRFS /mnt/boot
-mount -o ssd,noatime,space_cache=v2,autodefrag,compress=zstd:15,discard=async,nodev,nosuid,subvol=@/root $BTRFS /mnt/root
+mount -o ssd,noatime,space_cache=v2,autodefrag,compress=zstd:15,discard=async,nodev,nosuid,subvol=@/root $BTRFS /mnt/root 
 mount -o ssd,noatime,space_cache=v2.autodefrag,compress=zstd:15,discard=async,nodev,nosuid,subvol=@/home $BTRFS /mnt/home
 mount -o ssd,noatime,space_cache=v2,autodefrag,compress=zstd:15,discard=async,subvol=@/.snapshots $BTRFS /mnt/.snapshots
 mount -o ssd,noatime,space_cache=v2.autodefrag,compress=zstd:15,discard=async,subvol=@/srv $BTRFS /mnt/srv
@@ -183,9 +183,8 @@ mount -o nodev,nosuid,noexec $ESP /mnt/boot/efi
 kernel_selector
 
 # Pacstrap (setting up a base sytem onto the new root).
-# As I said above, I am considering replacing gnome-software with pamac-flatpak-gnome as PackageKit seems very buggy on Arch Linux right now.
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base ${kernel} ${microcode} linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager apparmor python-psutil nano gdm gnome-control-center gnome-terminal gnome-software gnome-software-packagekit-plugin gnome-tweaks nautilus pipewire-pulse pipewire-alsa pipewire-jack flatpak firewalld zram-generator adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts reflector mlocate man-db
+pacstrap /mnt base ${kernel} ${microcode} linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo networkmanager apparmor python-psutil nano gdm gnome-control-center gnome-terminal xorg gnome-tweaks nautilus pipewire-pulse pipewire-alsa pipewire-jack firewalld zram-generator adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts reflector mlocate man-db
 
 # Routing jack2 through PipeWire.
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
@@ -248,7 +247,7 @@ chmod 755 /mnt/etc/grub.d/*
 dd bs=512 count=4 if=/dev/random of=/mnt/cryptkey/.root.key iflag=fullblock &>/dev/null
 chmod 000 /mnt/cryptkey/.root.key &>/dev/null
 cryptsetup -v luksAddKey /dev/disk/by-partlabel/cryptroot /mnt/cryptkey/.root.key
-sed -i "s#quiet#cryptdevice=UUID=$UUID:cryptroot root=$BTRFS lsm=landlock,lockdown,yama,apparmor,bpf cryptkey=rootfs:/cryptkey/.root.key#g" /mnt/etc/default/grub
+sed -i "s#quiet#quiet cryptdevice=UUID=$UUID:cryptroot root=$BTRFS lsm=landlock,lockdown,yama,apparmor,bpf cryptkey=rootfs:/cryptkey/.root.key#g" /mnt/etc/default/grub
 sed -i 's#FILES=()#FILES=(/cryptkey/.root.key)#g' /mnt/etc/mkinitcpio.conf
 
 # Configure AppArmor Parser caching
@@ -289,12 +288,15 @@ account		required	pam_unix.so
 session		required	pam_unix.so
 EOF
 
-# ZRAM configuration
+
+# ZRAM configuration 
 bash -c 'cat > /mnt/etc/systemd/zram-generator.conf' <<-'EOF'
 [zram0]
 zram-fraction = 1
-max-zram-size = 8192
+max-zram-size = MEMSIZE
 EOF
+sed s/MEMSIZE/$(free -m | grep -oP '\d+' | head -n 1)/g  /mnt/etc/systemd/zram-generator.conf
+
 
 # Randomize Mac Address.
 bash -c 'cat > /mnt/etc/NetworkManager/conf.d/00-macrandomize.conf' <<-'EOF'
@@ -327,17 +329,17 @@ chmod 600 /mnt/etc/NetworkManager/conf.d/ip6-privacy.conf
 
 # Configuring the system.
 arch-chroot /mnt /bin/bash -e <<EOF
-
+    
     # Setting up timezone.
     ln -sf /usr/share/zoneinfo/$(curl -s http://ip-api.com/line?fields=timezone) /etc/localtime &>/dev/null
-
+    
     # Setting up clock.
     hwclock --systohc
-
-    # Generating locales.my keys aren't even on
+    
+    # Generating locales.my keys aren't even on 
     echo "Generating locales."
     locale-gen &>/dev/null
-
+    
     # Generating a new initramfs.
     echo "Creating a new initramfs."
     chmod 600 /boot/initramfs-linux* &>/dev/null
@@ -355,7 +357,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Installing GRUB.
     echo "Installing GRUB on /boot."
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt cryptodisk luks gcry_rijndael gcry_sha256 btrfs" --disable-shim-lock &>/dev/null
-
+    
     # Creating grub config file.
     echo "Creating GRUB config file."
     grub-mkconfig -o /boot/grub/grub.cfg &>/dev/null
@@ -365,7 +367,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
         echo "Adding $username with root privilege."
         useradd -m $username
         usermod -aG wheel $username
-
         groupadd -r audit
         gpasswd -a $username audit
     fi
@@ -387,10 +388,7 @@ EOF
 chmod 700 /mnt/home/${username}/.config/autostart/apparmor-notify.desktop
 chown -R $username:$username /mnt/home/${username}/.config
 
-
-# Setting user password.
-
-
+# Setting user password
 [ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username"
 
 # Giving wheel user sudo access.
