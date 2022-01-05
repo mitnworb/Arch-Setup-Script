@@ -84,7 +84,7 @@ mkfs.fat -F 32 $ESP &>/dev/null
 #tsetup luksFormat --type luks1 $cryptroot
 #echo "Opening the newly created LUKS Container."
 #cryptsetup open $cryptroot cryptroot
-#BTRFS="/dev/mapper/cryptroot"
+BTRFS="/dev/mapper/root"
 
 # Formatting root as BTRFS.
 echo "Formatting the root as BTRFS."
