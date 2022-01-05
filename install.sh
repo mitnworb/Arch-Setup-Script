@@ -66,11 +66,10 @@ parted -s "$DISK" \
     mklabel gpt \
     mkpart ESP fat32 1MiB 513MiB \
     set 1 esp on \
-    mkpart primary btrfs 513MiB 100% \
-    name 2 root \
+    mkpart ROOT btrfs 513MiB 100% \
 
 ESP="/dev/disk/by-partlabel/ESP"
-ROOT="/dev/disk/by-partlabel/root"
+ROOT="/dev/disk/by-partlabel/ROOT"
 
 # Informing the Kernel of the changes.
 echo "Informing the Kernel about the disk changes."
@@ -80,17 +79,10 @@ partprobe "$DISK"
 echo "Formatting the EFI Partition as FAT32."
 mkfs.fat -F 32 $ESP &>/dev/null
 
-# Creating a LUKS Container for the root partition.
-#echo "Creating LUKS Container for the root partition."
-#tsetup luksFormat --type luks1 $cryptroot
-#echo "Opening the newly created LUKS Container."
-#cryptsetup open $cryptroot cryptroot
-BTRFS="/dev/mapper/root"
-
 # Formatting root as BTRFS.
 echo "Formatting the root as BTRFS."
-mkfs.btrfs -L root -n 32k $BTRFS &>/dev/null
-mount -o clear_cache,nospace_cache $BTRFS /mnt
+mkfs.btrfs -L root -n 32k $ROOT &>/dev/null
+mount -o clear_cache,nospace_cache $ROOT /mnt
 
 # Creating BTRFS subvolumes.
 echo "Creating BTRFS subvolumes."
