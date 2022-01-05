@@ -66,7 +66,7 @@ parted -s "$DISK" \
     mklabel gpt \
     mkpart ESP fat32 1MiB 513MiB \
     set 1 esp on \
-    mkpart primary root btrfs 513MiB 100% \
+    mkpart primary "root" btrfs 513MiB 100% \
 
 ESP="/dev/disk/by-partlabel/ESP"
 ROOT="/dev/disk/by-partlabel/root"
