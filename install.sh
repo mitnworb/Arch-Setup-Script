@@ -9,6 +9,10 @@ pacman -Sy
 # Installing curl
 pacman -S --noconfirm curl
 
+function pause(){
+   read -p "$*"
+}
+
 # Selecting the kernel flavor to install.
 kernel_selector () {
     echo "List of kernels:"
@@ -59,7 +63,7 @@ else
     echo "Quitting."
     exit
 fi
-
+pause
 # Creating a new partition scheme.
 echo "Creating new partition scheme on $DISK."
 parted -s "$DISK" \
@@ -70,20 +74,21 @@ parted -s "$DISK" \
 
 ESP="/dev/disk/by-partlabel/ESP"
 ROOT="/dev/disk/by-partlabel/ROOT"
-
+pause
 # Informing the Kernel of the changes.
 echo "Informing the Kernel about the disk changes."
 partprobe "$DISK"
-
+pause
 # Formatting the ESP as FAT32.
 echo "Formatting the EFI Partition as FAT32."
-mkfs.fat -F 32 $ESP &>/dev/null
-
+mkfs.fat -F 32 $ESP
+pause
 # Formatting root as BTRFS.
 echo "Formatting the root as BTRFS."
-mkfs.btrfs -L root -n 32k $ROOT &>/dev/null
-mount /dev/disk/by-partlabel/ROOT /mnt
-
+mkfs.btrfs -L root -n 32k $ROOT
+pause
+mount $ROOT /mnt
+pause
 # Creating BTRFS subvolumes.
 echo "Creating BTRFS subvolumes."
 btrfs su cr /mnt/@ &>/dev/null
