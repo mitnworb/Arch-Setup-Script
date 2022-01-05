@@ -82,7 +82,7 @@ mkfs.fat -F 32 $ESP &>/dev/null
 # Formatting root as BTRFS.
 echo "Formatting the root as BTRFS."
 mkfs.btrfs -L root -n 32k $ROOT &>/dev/null
-mount -o clear_cache,nospace_cache $ROOT /mnt
+mount -o clear_cache,nospace_cache /dev/disk/by-partlabel/ROOT /mnt
 
 # Creating BTRFS subvolumes.
 echo "Creating BTRFS subvolumes."
