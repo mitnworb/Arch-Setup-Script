@@ -364,10 +364,7 @@ arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) NOPASSWD:ALL/g' /mnt/etc/sudoers
 
 # Install AUR .
-arch-chroot /mnt sudo -H -u "$username" bash -c "
-    git clone https://aur.archlinux.org/yay.git /home/$username/yay && 
-    cd /home/$username/yay && makepkg -si --noconfirm && 
-"
+arch-chroot /mnt sudo -H -u "$username" bash -c "git clone https://aur.archlinux.org/yay.git /home/$username/yay && cd /home/$username/yay && makepkg -si --noconfirm"
 
 # Change audit logging group
 echo "log_group = audit" >> /etc/audit/auditd.conf
