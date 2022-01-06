@@ -10,7 +10,7 @@ pacman -Sy
 pacman -S --noconfirm curl
 
 function pause(){
-   read -p "$*"
+   read -p "Press [Enter] key to continue..."
 }
 
 # Selecting the kernel flavor to install.
@@ -108,7 +108,7 @@ btrfs su cr /mnt/@/var_lib_libvirt_images &>/dev/null
 btrfs su cr /mnt/@/var_lib_machines &>/dev/null
 btrfs su cr /mnt/@/var_lib_gdm &>/dev/null
 btrfs su cr /mnt/@/var_lib_AccountsService &>/dev/null
-pause
+
 
 chattr +C /mnt/@/boot
 chattr +C /mnt/@/srv
@@ -125,7 +125,7 @@ chattr +C /mnt/@/var_lib_AccountsService
 
 #Set the default BTRFS Subvol to Snapshot 1 before pacstrapping
 btrfs subvolume set-default "$(btrfs subvolume list /mnt | grep "@/.snapshots/1/snapshot" | grep -oP '(?<=ID )[0-9]+')" /mnt
-pause
+
 cat << EOF >> /mnt/@/.snapshots/1/info.xml
 <?xml version="1.0"?>
 <snapshot>
@@ -343,7 +343,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Creating a new initramfs."
     chmod 600 /boot/initramfs-linux* &>/dev/null
     mkinitcpio -P &>/dev/null
-
+pause
     # Snapper configuration
     umount /.snapshots
     rm -r /.snapshots
@@ -352,7 +352,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     mkdir /.snapshots
     mount -a
     chmod 750 /.snapshots
-
+pause
     # Installing GRUB.
     echo "Installing GRUB on /boot."
     grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --modules="normal test efi_gop efi_uga search echo linux all_video gfxmenu gfxterm_background gfxterm_menu gfxterm loadenv configfile gzio part_gpt gcry_rijndael gcry_sha256 btrfs" --disable-shim-lock &>/dev/null
