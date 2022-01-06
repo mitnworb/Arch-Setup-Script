@@ -204,20 +204,12 @@ EOF
 read -r -p "Please enter name for a user account (leave empty to skip): " username
 
 # Setting up locales.
-read -r -p "Please insert the locale you use (format: xx_XX or enter empty to use en_US): " locale
-if [ -z "$locale" ]; then
-   print "en_US will be used as default locale."
-   locale="en_US"
-   fi
+locale="en_US"
 echo "$locale.UTF-8 UTF-8"  > /mnt/etc/locale.gen
 echo "LANG=$locale.UTF-8" > /mnt/etc/locale.conf
 
 # Setting up keyboard layout.
-read -r -p "Please insert the keyboard layout you use (enter empty to use US keyboard layout): " kblayout
-if [ -z "$kblayout" ]; then
-   print "US keyboard layout will be used by default."
-   kblayout="us"
-   fi
+kblayout="us"
 echo "KEYMAP=$kblayout" > /mnt/etc/vconsole.conf
 
 # Configuring /etc/mkinitcpio.conf
@@ -229,9 +221,9 @@ sed -i 's,modconf block filesystems keyboard,keyboard modconf block filesystems,
 #UUID=$(blkid $cryptroot | cut -f2 -d'"')
 #sed -i 's/#\(GRUB_ENABLE_CRYPTODISK=y\)/\1/' /mnt/etc/default/grub
 #echo "" >> /mnt/etc/default/grub
-#echo -e "# Booting with BTRFS subvolume\nGRUB_BTRFS_OVERRIDE_BOOT_PARTITION_DETECTION=true" >> /mnt/etc/default/grub
-#sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/10_linux
-#sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/20_linux_xen
+echo -e "# Booting with BTRFS subvolume\nGRUB_BTRFS_OVERRIDE_BOOT_PARTITION_DETECTION=true" >> /mnt/etc/default/grub
+sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/10_linux
+sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/20_linux_xen
 
 # Enabling CPU Mitigations
 curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/grub.d/40_cpu_mitigations.cfg >> /mnt/etc/grub.d/40_cpu_mitigations
