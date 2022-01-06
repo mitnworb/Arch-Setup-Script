@@ -197,7 +197,9 @@ cat > /mnt/etc/hosts <<EOF
 EOF
 
 # Setting username.
-read -r -p "Please enter name for a user account (leave empty to skip): " username
+read -r -p "Please enter name for a user account: " username
+read -r -p "Please enter full name for this user account: " fullname
+
 
 # Setting up locales.
 locale="en_US"
@@ -330,7 +332,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Adding user with sudo privilege
     if [ -n "$username" ]; then
         echo "Adding $username with root privilege."
-        useradd -m $username
+        useradd -m -c $fullname $username
         usermod -aG wheel $username
 
         groupadd -r audit
