@@ -9,10 +9,6 @@ pacman -Sy
 # Installing curl
 pacman -S --noconfirm curl
 
-function pause(){
-   read -p "Press [Enter] key to continue..."
-}
-
 # Selecting the kernel flavor to install.
 kernel_selector () {
     echo "List of kernels:"
@@ -178,7 +174,7 @@ kernel_selector
 # Pacstrap (setting up a base sytem onto the new root).
 # As I said above, I am considering replacing gnome-software with pamac-flatpak-gnome as PackageKit seems very buggy on Arch Linux right now.
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base ${kernel} ${microcode} linux-firmware grub grub-btrfs snapper snap-pac efibootmgr sudo vim git networkmanager apparmor python-psutil nano gdm gnome gnome-control-center gnome-terminal gnome-software gnome-software-packagekit-plugin gnome-tweaks nautilus pipewire-pulse pipewire-alsa pipewire-jack flatpak firewalld zram-generator adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts reflector mlocate man-db
+pacstrap /mnt base ${kernel} ${microcode} linux-firmware base-devel grub grub-btrfs snapper snap-pac efibootmgr sudo vim git networkmanager apparmor python-psutil gdm gnome gnome-software-packagekit-plugin gnome-tweaks pipewire-pulse pipewire-alsa pipewire-jack flatpak firewalld zram-generator adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts reflector mlocate man-db
 
 # Routing jack2 through PipeWire.
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
@@ -217,10 +213,7 @@ echo "Configuring /etc/mkinitcpio for ZSTD compression and LUKS hook."
 sed -i 's,#COMPRESSION="zstd",COMPRESSION="zstd",g' /mnt/etc/mkinitcpio.conf
 sed -i 's,modconf block filesystems keyboard,keyboard modconf block filesystems,g' /mnt/etc/mkinitcpio.conf
 
-# Enabling LUKS in GRUB and setting the UUID of the LUKS container.
-#UUID=$(blkid $cryptroot | cut -f2 -d'"')
-#sed -i 's/#\(GRUB_ENABLE_CRYPTODISK=y\)/\1/' /mnt/etc/default/grub
-#echo "" >> /mnt/etc/default/grub
+# More GRUB setup for BRTFS.
 echo -e "# Booting with BTRFS subvolume\nGRUB_BTRFS_OVERRIDE_BOOT_PARTITION_DETECTION=true" >> /mnt/etc/default/grub
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/10_linux
 sed -i 's#rootflags=subvol=${rootsubvol}##g' /mnt/etc/grub.d/20_linux_xen
@@ -236,13 +229,6 @@ curl https://raw.githubusercontent.com/Whonix/security-misc/master/etc/default/g
 
 # Setting GRUB configuration file permissions
 chmod 755 /mnt/etc/grub.d/*
-
-# Adding keyfile to the initramfs to avoid double password.
-#dd bs=512 count=4 if=/dev/random of=/mnt/cryptkey/.root.key iflag=fullblock &>/dev/null
-#chmod 000 /mnt/cryptkey/.root.key &>/dev/null
-#cryptsetup -v luksAddKey /dev/disk/by-partlabel/cryptroot /mnt/cryptkey/.root.key
-#sed -i "s#quiet#cryptdevice=UUID=$UUID:cryptroot root=$BTRFS lsm=landlock,lockdown,yama,apparmor,bpf cryptkey=rootfs:/cryptkey/.root.key#g" /mnt/etc/default/grub
-#sed -i 's#FILES=()#FILES=(/cryptkey/.root.key)#g' /mnt/etc/mkinitcpio.conf
 
 # Configure AppArmor Parser caching
 sed -i 's/#write-cache/write-cache/g' /mnt/etc/apparmor/parser.conf
@@ -289,18 +275,6 @@ zram-fraction = 1
 max-zram-size = 8192
 EOF
 
-# Randomize Mac Address.
-#bash -c 'cat > /mnt/etc/NetworkManager/conf.d/00-macrandomize.conf' <<-'EOF'
-#[device]
-#wifi.scan-rand-mac-address=yes
-#[connection]
-#wifi.cloned-mac-address=random
-#ethernet.cloned-mac-address=random
-#connection.stable-id=${CONNECTION}/${BOOT}
-#EOF
-
-#chmod 600 /mnt/etc/NetworkManager/conf.d/00-macrandomize.conf
-
 # Disable Connectivity Check.
 bash -c 'cat > /mnt/etc/NetworkManager/conf.d/20-connectivity.conf' <<-'EOF'
 [connectivity]
@@ -335,7 +309,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     echo "Creating a new initramfs."
     chmod 600 /boot/initramfs-linux* &>/dev/null
     mkinitcpio -P &>/dev/null
-
+    
     # Snapper configuration
     umount /.snapshots
     rm -r /.snapshots
@@ -362,6 +336,10 @@ arch-chroot /mnt /bin/bash -e <<EOF
         groupadd -r audit
         gpasswd -a $username audit
     fi
+    #Install Yay
+    git clone https://aur.archlinux.org/yay-bin.git /tmp/
+    cd /tmp/yay-bin
+    makepkg -si
 EOF
 
 # Enable AppArmor notifications
@@ -387,7 +365,7 @@ arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 [ -n "$username" ] && echo "Setting user password for ${username}." && arch-chroot /mnt /bin/passwd "$username"
 
 # Giving wheel user sudo access.
-sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /mnt/etc/sudoers
+sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) NOPASSWD:ALL/g' /mnt/etc/sudoers
 
 # Change audit logging group
 echo "log_group = audit" >> /etc/audit/auditd.conf
