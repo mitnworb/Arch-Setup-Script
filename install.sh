@@ -332,7 +332,7 @@ arch-chroot /mnt /bin/bash -e <<EOF
     # Adding user with sudo privilege
     if [ -n "$username" ]; then
         echo "Adding $username with root privilege."
-        useradd -m -c $fullname $username
+        useradd -m -c "$fullname" $username
         usermod -aG wheel $username
 
         groupadd -r audit
