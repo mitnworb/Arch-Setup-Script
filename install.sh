@@ -336,10 +336,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
         groupadd -r audit
         gpasswd -a $username audit
     fi
-    #Install Yay
-    git clone https://aur.archlinux.org/yay-bin.git /tmp/
-    cd /tmp/yay-bin
-    makepkg -si
 EOF
 
 # Enable AppArmor notifications
