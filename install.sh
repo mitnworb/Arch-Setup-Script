@@ -174,7 +174,7 @@ kernel_selector
 # Pacstrap (setting up a base sytem onto the new root).
 # As I said above, I am considering replacing gnome-software with pamac-flatpak-gnome as PackageKit seems very buggy on Arch Linux right now.
 echo "Installing the base system (it may take a while)."
-pacstrap /mnt base ${kernel} ${microcode} linux-firmware base-devel grub grub-btrfs snapper snap-pac efibootmgr sudo vim git tilix networkmanager apparmor python-psutil gdm gnome gnome-software-packagekit-plugin gnome-tweaks gnome-themes-extra pipewire-pulse pipewire-alsa pipewire-jack neofetch yadm nextcloud flatpak firewalld zram-generator adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts reflector mlocate man-db
+pacstrap /mnt base ${kernel} ${microcode} linux-firmware base-devel grub grub-btrfs snapper snap-pac efibootmgr sudo vim git tilix networkmanager apparmor python-psutil gdm gnome gnome-software-packagekit-plugin gnome-tweaks gnome-themes-extra pipewire-pulse pipewire-alsa pipewire-jack neofetch yadm nextcloud-client flatpak firewalld zram-generator adobe-source-han-sans-otc-fonts adobe-source-han-serif-otc-fonts gnu-free-fonts reflector mlocate man-db
 
 # Routing jack2 through PipeWire.
 echo "/usr/lib/pipewire-0.3/jack" > /mnt/etc/ld.so.conf.d/pipewire-jack.conf
@@ -365,8 +365,11 @@ arch-chroot /mnt chown -R $username:$username /home/${username}/.config
 # Giving wheel user sudo access.
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) NOPASSWD:ALL/g' /mnt/etc/sudoers
 
-# Install AUR .
-arch-chroot /mnt sudo -H -u "$username" bash -c "git clone https://aur.archlinux.org/yay.git /home/$username/yay && cd /home/$username/yay && makepkg -si --noconfirm"
+# Install AUR.
+arch-chroot /mnt sudo -H -u "$username" bash -c "git clone https://aur.archlinux.org/yay.git /home/$username/yay && cd /home/$username/yay && makepkg -si --noconfirm && cd /home/$username && rm -rf /home/$username/yay"
+
+# Install GNOME Shell integration for Chrome.
+arch-chroot /mnt sudo -H -u "$username" bash -c "git git clone https://aur.archlinux.org/chrome-gnome-shell.git /home/$username/chrome-gnome-shell && cd /home/$username/chrome-gnome-shell && makepkg -si --noconfirm && cd /home/$username && rm -rf /home/$username/chrome-gnome-shell"
 
 # Change audit logging group
 echo "log_group = audit" >> /etc/audit/auditd.conf
